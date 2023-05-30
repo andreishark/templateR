@@ -52,7 +52,7 @@ jobs:
           override: true
       
       - if: ${{ steps.cache-cargo.outputs.cache-hit != 'true' }}
-      - name: Install required cargo
+        name: Install required cargo
         run: cargo install clippy-sarif sarif-fmt
       
       - name: Run rust-clippy
