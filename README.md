@@ -9,4 +9,4 @@ This is a simple template creator written in rust
 
 `templateR save-template [NAME] [PATH]` to add a template
 
-`templateR load-template [NAME] [PATh]` to load a template
+`templateR load-template [NAME] [PATH]` to load a template
