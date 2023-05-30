@@ -360,7 +360,7 @@ mod tests {
 
         match check_config(&initial_config) {
             Ok(x) => x,
-            Err(error) => panic!("Config is invalid: {}", error),
+            Err(error) => panic!("Config is invalid: {:?}", error),
         }
     }
 }
