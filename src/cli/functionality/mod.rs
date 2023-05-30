@@ -59,8 +59,6 @@ pub fn init_function(args: &InitPushArgs ) -> Result<(), AppError> {
         Some(path) => create_manual_config(Path::new(&path))?,
     };
 
-    //TODO: Delete
-    println!("Initializing template directory at: {}", config.template_absolute_path.to_str().unwrap());
     confy::store(app_name!(), config_name!(), config)?;
 
     Ok(())
@@ -184,12 +182,13 @@ mod tests {
 
         init_function(&args)?;
 
-        println!("Path: {}", path.to_str().unwrap());
         let config: InitialConfig = confy::load(app_name!(), config_name!())?;
 
         assert_eq!(config.template_absolute_path, path);
         assert_eq!(config.version, app_version!());
         assert!(config.initialized);
+
+        std::fs::remove_dir_all(PathBuf::from("/tmp/app/"))?;
 
         Ok(())
     }
@@ -211,6 +210,9 @@ mod tests {
         assert_eq!(config.template_absolute_path, test_path);
         assert_eq!(config.version, app_version!());
         assert!(config.initialized);
+
+        let delete_path = confy::get_configuration_file_path(app_name!(), config_name!())?;
+        std::fs::remove_dir_all(delete_path.parent().unwrap())?;
 
         Ok(())
     }
