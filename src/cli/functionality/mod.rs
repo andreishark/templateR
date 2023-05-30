@@ -59,6 +59,8 @@ pub fn init_function(args: &InitPushArgs ) -> Result<(), AppError> {
         Some(path) => create_manual_config(Path::new(&path))?,
     };
 
+    //TODO: Delete
+    println!("Initializing template directory at: {}", config.template_absolute_path.to_str().unwrap());
     confy::store(app_name!(), config_name!(), config)?;
 
     Ok(())
@@ -144,6 +146,21 @@ pub fn load_template_function(args: &LoadTemplateArgs) -> Result<(), AppError> {
     Ok(())
 }
 
+pub fn show_config() -> Result<(), AppError> {
+    let config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
+    check_config(&config)?;
+
+    println!("Config file path: {}", confy::get_configuration_file_path(app_name!(), config_name!())?.to_str().unwrap());
+    println!("Version: {}", config.version);
+    println!("Template directory: {}", config.template_absolute_path.to_str().unwrap());
+    println!("Templates: ");
+    for template in config.templates {
+        println!("\t{}", template);
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
@@ -167,6 +184,7 @@ mod tests {
 
         init_function(&args)?;
 
+        println!("Path: {}", path.to_str().unwrap());
         let config: InitialConfig = confy::load(app_name!(), config_name!())?;
 
         assert_eq!(config.template_absolute_path, path);
@@ -186,7 +204,11 @@ mod tests {
 
         let config: InitialConfig = confy::load(app_name!(), config_name!())?;
 
-        assert_eq!(config.template_absolute_path, PathBuf::from(format!("{}/.config/{}", std::env::var("HOME").unwrap(), template_path!())));
+        let mut test_path = confy::get_configuration_file_path(app_name!(), config_name!())?;
+        test_path.pop();
+        test_path.push(template_folder_name!());
+
+        assert_eq!(config.template_absolute_path, test_path);
         assert_eq!(config.version, app_version!());
         assert!(config.initialized);
 

@@ -3,7 +3,7 @@ mod functionality;
 use clap::{Args, Parser, Subcommand};
 use crate::{app_name, app_version_string, app_author, app_about};
 use crate::app_error::AppError;
-use crate::cli::functionality::{delete_init_function, init_function, load_template_function, save_template_function};
+use crate::cli::functionality::{delete_init_function, init_function, load_template_function, save_template_function, show_config};
 use crate::constants::{APP_NAME, APP_VERSION_STRING, APP_AUTHOR, APP_ABOUT};
 
 #[derive(Debug, Args)]
@@ -62,7 +62,8 @@ pub enum Commands {
     LoadTemplate {
         #[command(flatten)]
         load: LoadTemplateArgs
-    }
+    },
+    ShowConfig
 }
 
 /// This command will match the commands to the corresponding functions
@@ -93,6 +94,7 @@ pub fn match_commands(cli: &Cli) -> Result<(), AppError> {
 
         Commands::SaveTemplate { save } => { save_template_function(save)? }
         Commands::LoadTemplate { load } => { load_template_function(load)? }
+        Commands::ShowConfig => { show_config()? }
     }
     Ok(())
 }

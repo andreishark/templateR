@@ -297,7 +297,7 @@ mod tests {
             initial_config.template_absolute_path,
             test_template_absolute_path
         );
-        assert_eq!(initial_config.initialized, false)
+        assert!(!initial_config.initialized)
     }
 
     #[test]
@@ -360,7 +360,7 @@ mod tests {
 
         match check_config(&initial_config) {
             Ok(x) => x,
-            Err(error) => panic!("Config is invalid: {}", error),
+            Err(error) => panic!("Config is invalid: {:?}", error),
         }
     }
 }
