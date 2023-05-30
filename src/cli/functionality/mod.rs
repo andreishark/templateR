@@ -144,6 +144,21 @@ pub fn load_template_function(args: &LoadTemplateArgs) -> Result<(), AppError> {
     Ok(())
 }
 
+pub fn show_config() -> Result<(), AppError> {
+    let config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
+    check_config(&config)?;
+
+    println!("Config file path: {}", confy::get_configuration_file_path(app_name!(), config_name!())?.to_str().unwrap());
+    println!("Version: {}", config.version);
+    println!("Template directory: {}", config.template_absolute_path.to_str().unwrap());
+    println!("Templates: ");
+    for template in config.templates {
+        println!("\t{}", template);
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
