@@ -201,7 +201,8 @@ mod tests {
 
         let config: InitialConfig = confy::load(app_name!(), config_name!())?;
 
-        let mut test_path = home::home_dir().unwrap();
+        let mut test_path = confy::get_configuration_file_path(app_name!(), config_name!())?;
+        test_path.pop();
         test_path.push(template_folder_name!());
 
         assert_eq!(config.template_absolute_path, test_path);
