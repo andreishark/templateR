@@ -41,8 +41,8 @@ jobs:
       - name: Install required cargo
         run: cargo install clippy-sarif sarif-fmt
       
-      - uses: actions/cache@v3
       - name: Cache Result
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/bin/
