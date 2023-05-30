@@ -201,7 +201,10 @@ mod tests {
 
         let config: InitialConfig = confy::load(app_name!(), config_name!())?;
 
-        assert_eq!(config.template_absolute_path, PathBuf::from(format!("{}/.config/{}", std::env::var("HOME").unwrap(), template_path!())));
+        let mut test_path = home::home_dir().unwrap();
+        test_path.push(template_folder_name!());
+
+        assert_eq!(config.template_absolute_path, test_path);
         assert_eq!(config.version, app_version!());
         assert!(config.initialized);
 

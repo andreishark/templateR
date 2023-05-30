@@ -297,7 +297,7 @@ mod tests {
             initial_config.template_absolute_path,
             test_template_absolute_path
         );
-        assert_eq!(initial_config.initialized, false)
+        assert!(!initial_config.initialized)
     }
 
     #[test]
