@@ -1,7 +1,9 @@
 [package]
-name = "templateR"
+name = "cli"
 version = "0.1.0"
 edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 clap = { version = "4.3.0", features = ["derive"] }
@@ -10,17 +12,3 @@ copy_dir = "0.1.2"
 home = "0.5.5"
 serde = { version = "1.0.163", features = ["derive"]}
 thiserror = "1.0.40"
-
-[workspace]
-members= [
-    "bin",
-    "cli"
-]
-
-[lib]
-name = "cli"
-path = "./cli/src/lib.rs"
-
-[[bin]]
-name = "bin"
-path = "./bin/src/main.rs"

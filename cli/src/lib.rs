@@ -1,10 +1,13 @@
 mod functionality;
+pub mod template_config_module;
+pub mod app_error;
+pub mod constants;
 
+// use clap::{Args, Parser, Subcommand};
+pub use crate::app_error::AppError;
+use crate::functionality::{delete_init_function, init_function, load_template_function, save_template_function, show_config};
+use crate::constants::{APP_NAME, APP_AUTHOR, APP_ABOUT, APP_VERSION_STRING};
 use clap::{Args, Parser, Subcommand};
-use crate::{app_name, app_version_string, app_author, app_about};
-use crate::app_error::AppError;
-use crate::cli::functionality::{delete_init_function, init_function, load_template_function, save_template_function, show_config};
-use crate::constants::{APP_NAME, APP_VERSION_STRING, APP_AUTHOR, APP_ABOUT};
 
 #[derive(Debug, Args)]
 pub struct InitPushArgs {
@@ -76,7 +79,8 @@ pub enum Commands {
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust,ignore
+/// use cli::{Cli, match_commands};
 /// let cli = Cli::parse();
 ///
 /// match_commands(&cli)?;
