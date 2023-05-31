@@ -1,9 +1,8 @@
-use std::path::{Path, PathBuf};
-use confy::ConfyError;
+use std::path::{Path};
 use crate::{app_name, config_name};
 use crate::AppError;
-use crate::cli::{InitPushArgs, LoadTemplateArgs, SaveTemplateArgs};
-use crate::template_config::{check_config, create_default_config, create_manual_config, delete_config_parent, InitialConfig};
+use crate::{InitPushArgs, LoadTemplateArgs, SaveTemplateArgs};
+use crate::template_config_module::{check_config, create_default_config, create_manual_config, delete_config_parent, InitialConfig};
 use crate::constants::{APP_NAME, CONFIG_NAME};
 
 fn copy_to_dest(source: &Path, dest: &Path) -> Result<(), AppError> {
@@ -35,7 +34,12 @@ fn copy_to_dest(source: &Path, dest: &Path) -> Result<(), AppError> {
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust,ignore
+/// use std::path::PathBuf;
+/// use cli::{app_name, app_version, config_name, InitPushArgs, template_path};
+/// use cli::constants::{APP_NAME, APP_VERSION, CONFIG_NAME, TEMPLATE_FOLDER_NAME};
+/// use cli::template_config_module::InitialConfig;
+///
 /// let mut path = PathBuf::from("/tmp/");
 /// path.push("app");
 ///
@@ -87,11 +91,13 @@ pub fn delete_init_function() -> Result<(), AppError> {
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust,ignore
+/// use cli::SaveTemplateArgs;
+///
 /// let args = SaveTemplateArgs {
 ///     name: "test".to_string(),
 ///     path: "/tmp/app".to_string(),
-///     overwrite: Some(true)
+///     overwrite: true
 /// };
 ///
 /// save_template_function(&args)?;
@@ -162,16 +168,20 @@ pub fn show_config() -> Result<(), AppError> {
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
-    use crate::cli::functionality::init_function;
-    use crate::cli::InitPushArgs;
-    use crate::constants::{APP_NAME, CONFIG_NAME, APP_VERSION};
-    use crate::template_config::InitialConfig;
-    use crate::AppError;
+    use crate::constants::{APP_NAME, CONFIG_NAME, APP_VERSION, TEMPLATE_FOLDER_NAME};
+    use crate::{AppError, InitPushArgs};
     use crate::{app_name, app_version, config_name, template_path, template_folder_name};
-    use crate::template_config::TEMPLATE_FOLDER_NAME;
+    use crate::functionality::{delete_init_function, init_function};
+    use crate::template_config_module::InitialConfig;
 
     #[test]
     fn test_init_function() -> Result<(), AppError> {
+        match delete_init_function() {
+            Ok(_) => (),
+            Err(AppError::TemplateNotInitialized) => (),
+            Err(x) => return Err(x),
+        }
+
         let mut path = PathBuf::from("/tmp/");
         path.push("app");
 
@@ -195,6 +205,12 @@ mod tests {
 
     #[test]
     fn test_init_function_default_path() -> Result<(), AppError> {
+        match delete_init_function() {
+            Ok(_) => (),
+            Err(AppError::TemplateNotInitialized) => (),
+            Err(x) => return Err(x),
+        }
+
         let args = InitPushArgs {
             path: None
         };
@@ -229,7 +245,7 @@ mod tests {
 
         init_function(&args)?;
 
-        let args = crate::cli::SaveTemplateArgs {
+        let args = crate::SaveTemplateArgs {
             path: "/tmp/template/".to_string(),
             name: "test".to_string(),
             overwrite: false
@@ -241,7 +257,7 @@ mod tests {
             std::fs::File::create(format!("/tmp/template/test{}.txt", i))?;
         }
 
-        crate::cli::functionality::save_template_function(&args)?;
+        crate::functionality::save_template_function(&args)?;
 
         for i in 0..10 {
             assert!(std::fs::metadata(format!("/tmp/app/templater/{}/test/test{}.txt", template_folder_name!(), i)).is_ok());

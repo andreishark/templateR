@@ -1,5 +1,4 @@
-use std::fmt::Formatter;
-use std::{fmt, io};
+use std::{io};
 
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {

@@ -4,6 +4,7 @@ pub static APP_VERSION: f32 = 1.0;
 pub static APP_VERSION_STRING: &str = "1.0";
 pub static APP_AUTHOR: &str = "andreishark";
 pub static APP_ABOUT: &str = "A simple templating tool.";
+pub static TEMPLATE_FOLDER_NAME: &str = "templates";
 
 #[macro_export]
 macro_rules! app_name {
@@ -44,5 +45,27 @@ macro_rules! app_version_string {
 macro_rules! app_about {
     () => {
         APP_ABOUT
+    };
+}
+
+
+#[macro_export]
+macro_rules! template_folder_name {
+    () => {
+        TEMPLATE_FOLDER_NAME
+    };
+}
+
+#[macro_export]
+macro_rules! template_path {
+    () => {
+        format!("{}/{}", app_name!(), template_folder_name!())
+    };
+}
+
+#[macro_export]
+macro_rules! template_default_path {
+    () => {
+        format!(".config/{}/{}", app_name!(), template_folder_name!())
     };
 }
