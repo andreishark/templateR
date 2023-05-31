@@ -32,6 +32,10 @@ jobs:
     - if: ${{ steps.cargo-cache.outputs.cache-hit != 'true' }}
       name: Build
       run: cargo build --verbose
-        
+    
+    - if: ${{ steps.cargo-cache.outputs.cache-hit != 'true' }}
+      name: Build
+      run: cargo install clippy-sarif sarif-fmt
+    
     - name: Run tests
       run: cargo test --all --verbose -- --test-threads=1
