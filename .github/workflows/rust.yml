@@ -16,7 +16,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build
+    
+    - name: Cache build
+      uses: actions/cache@v3
+      id: cargo-cache
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    
+    - if: ${{ steps.cargo-cache.outputs.cache-hit != 'true' }}
+      name: Build
       run: cargo build --verbose
+        
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --verbose -- --test-threads=1
