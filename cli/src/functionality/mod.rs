@@ -159,7 +159,7 @@ pub fn show_config() -> Result<(), AppError> {
     println!("Template directory: {}", config.template_absolute_path.to_str().unwrap());
     println!("Templates: ");
     for template in config.templates {
-        println!("\t{}", template);
+        println!("\t- {}", template);
     }
 
     Ok(())
