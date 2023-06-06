@@ -1,11 +1,11 @@
 use clap::Parser;
-use cli::match_commands;
+use cli::{Cli, match_commands};
 use cli::AppError;
 
 fn main() -> Result<(), AppError> {
-    let cli = cli::Cli::parse();
+    let local_cli: Cli = cli::Cli::parse();
 
-    match_commands(&cli)?;
+    match_commands(&local_cli)?;
 
     Ok(())
 }

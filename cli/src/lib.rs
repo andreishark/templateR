@@ -58,10 +58,12 @@ pub enum Commands {
         #[command(flatten)]
         push: InitPushArgs
     },
+    #[command(arg_required_else_help = true)]
     SaveTemplate {
         #[command(flatten)]
         save: SaveTemplateArgs
     },
+    #[command(arg_required_else_help = true)]
     LoadTemplate {
         #[command(flatten)]
         load: LoadTemplateArgs
