@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.3.3", features = ["derive"] }
+clap = { version = "4.3.4", features = ["derive"] }
 confy = "0.5.1"
 copy_dir = "0.1.2"
 home = "0.5.5"
