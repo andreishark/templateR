@@ -11,5 +11,5 @@ clap = { version = "4.3.8", features = ["derive"] }
 confy = "0.5.1"
 copy_dir = "0.1.2"
 home = "0.5.5"
-serde = { version = "1.0.164", features = ["derive"]}
+serde = { version = "1.0.171", features = ["derive"]}
 thiserror = "1.0.40"
