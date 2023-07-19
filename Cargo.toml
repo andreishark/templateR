@@ -1,26 +1,34 @@
-[package]
-name = "templateR"
-version = "0.1.0"
-edition = "2021"
+# [package]
+# name = "templateR"
+# version = "0.1.0"
+# edition = "2021"
+#
+# [dependencies]
+# clap = { version = "4.3.1", features = ["derive"] }
+# confy = "0.5.1"
+# copy_dir = "0.1.2"
+# home = "0.5.5"
+# serde = { version = "1.0.163", features = ["derive"] }
+# thiserror = "1.0.40"
+#
+[workspace]
+members = ["templater", "cli", "core", "app_error", "constants", "config"]
 
-[dependencies]
+
+[workspace.dependencies]
+core = { path = "./core" }
+constants = { path = "./constants" }
+config = { path = "./config" }
+cli = { path = "./cli" }
+app_error = { path = "./app_error" }
 clap = { version = "4.3.1", features = ["derive"] }
 confy = "0.5.1"
 copy_dir = "0.1.2"
 home = "0.5.5"
-serde = { version = "1.0.163", features = ["derive"]}
+serde = { version = "1.0.163", features = ["derive"] }
 thiserror = "1.0.40"
+clap_complete = "4.3.2"
 
-[workspace]
-members= [
-    "bin",
-    "cli"
-]
-
-[lib]
-name = "cli"
-path = "./cli/src/lib.rs"
-
-[[bin]]
-name = "bin"
-path = "./bin/src/main.rs"
+# [[bin]]
+# name = "bin"
+# path = "./bin/src/main.rs"

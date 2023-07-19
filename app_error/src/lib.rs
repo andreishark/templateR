@@ -1,4 +1,4 @@
-use std::{io};
+use std::io;
 
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {

@@ -1,39 +1,14 @@
-mod functionality;
-pub mod template_config_module;
-pub mod app_error;
-pub mod constants;
-
-// use clap::{Args, Parser, Subcommand};
-pub use crate::app_error::AppError;
-use crate::functionality::{delete_init_function, init_function, load_template_function, save_template_function, show_config};
-use crate::constants::{APP_NAME, APP_AUTHOR, APP_ABOUT, APP_VERSION_STRING};
-use clap::{Args, Parser, Subcommand};
-
-#[derive(Debug, Args)]
-pub struct InitPushArgs {
-    /// Path to the template directory
-    #[arg(short, long)]
-    pub path: Option<String>
-}
-
-#[derive(Debug, Args)]
-pub struct SaveTemplateArgs {
-    /// Name of the template
-    pub name: String,
-    /// Path to the template directory that you want to save
-    pub path: String,
-    /// Overwrite the template if it already exists
-    #[arg(short, long, action)]
-    pub overwrite: bool
-}
-
-#[derive(Debug, Args)]
-pub struct LoadTemplateArgs {
-    /// Name of the template
-    pub name: String,
-    /// Path to the template directory that you want to save
-    pub path: String,
-}
+use app_error::AppError;
+use clap::{Parser, Subcommand};
+use constants::{
+    app_about, app_author, app_name, app_version_string, InitPushArgs, LoadTemplateArgs,
+    SaveTemplateArgs,
+};
+use constants::{APP_ABOUT, APP_AUTHOR, APP_NAME, APP_VERSION_STRING};
+use core::{
+    delete_init_function, init_function, load_template_function, save_template_function,
+    show_config,
+};
 
 #[derive(Subcommand)]
 pub enum InitCommands {
@@ -43,7 +18,7 @@ pub enum InitCommands {
 #[derive(Parser)]
 #[command(name = app_name!(), version = app_version_string!(), author = app_author!())]
 #[command(about = app_about!())]
-#[command(propagate_version=true)]
+#[command(propagate_version = true)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
@@ -56,19 +31,19 @@ pub enum Commands {
         command: Option<InitCommands>,
 
         #[command(flatten)]
-        push: InitPushArgs
+        push: InitPushArgs,
     },
     #[command(arg_required_else_help = true)]
     SaveTemplate {
         #[command(flatten)]
-        save: SaveTemplateArgs
+        save: SaveTemplateArgs,
     },
     #[command(arg_required_else_help = true)]
     LoadTemplate {
         #[command(flatten)]
-        load: LoadTemplateArgs
+        load: LoadTemplateArgs,
     },
-    ShowConfig
+    ShowConfig,
 }
 
 /// This command will match the commands to the corresponding functions
@@ -93,14 +68,14 @@ pub fn match_commands(cli: &Cli) -> Result<(), AppError> {
             match command {
                 None => init_function(push)?,
                 Some(commands) => match commands {
-                    InitCommands::Delete => { delete_init_function()? } }
-                ,
+                    InitCommands::Delete => delete_init_function()?,
+                },
             };
         }
 
-        Commands::SaveTemplate { save } => { save_template_function(save)? }
-        Commands::LoadTemplate { load } => { load_template_function(load)? }
-        Commands::ShowConfig => { show_config()? }
+        Commands::SaveTemplate { save } => save_template_function(save)?,
+        Commands::LoadTemplate { load } => load_template_function(load)?,
+        Commands::ShowConfig => show_config()?,
     }
     Ok(())
 }

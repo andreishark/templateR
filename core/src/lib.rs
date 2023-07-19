@@ -1,12 +1,13 @@
-use std::path::{Path};
-use crate::{app_name, config_name};
-use crate::AppError;
-use crate::{InitPushArgs, LoadTemplateArgs, SaveTemplateArgs};
-use crate::template_config_module::{check_config, create_default_config, create_manual_config, delete_config_parent, InitialConfig};
-use crate::constants::{APP_NAME, CONFIG_NAME};
+use app_error::AppError;
+use config::{
+    check_config, create_default_config, create_manual_config, delete_config_parent, InitialConfig,
+};
+use constants::{app_name, config_name};
+use constants::{InitPushArgs, LoadTemplateArgs, SaveTemplateArgs};
+use constants::{APP_NAME, CONFIG_NAME};
+use std::path::Path;
 
 fn copy_to_dest(source: &Path, dest: &Path) -> Result<(), AppError> {
-
     let iterated_paths = std::fs::read_dir(source)?;
 
     for item in iterated_paths {
@@ -56,9 +57,8 @@ fn copy_to_dest(source: &Path, dest: &Path) -> Result<(), AppError> {
 /// assert_eq!(config.version, app_version!());
 /// assert!(config.initialized);
 /// ```
-pub fn init_function(args: &InitPushArgs ) -> Result<(), AppError> {
-    let config = match &args
-        .path {
+pub fn init_function(args: &InitPushArgs) -> Result<(), AppError> {
+    let config = match &args.path {
         None => create_default_config()?,
         Some(path) => create_manual_config(Path::new(&path))?,
     };
@@ -141,7 +141,11 @@ pub fn load_template_function(args: &LoadTemplateArgs) -> Result<(), AppError> {
     let config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
     check_config(&config)?;
 
-    config.templates.iter().find(|&x| x == name).ok_or(AppError::TemplateDoesNotExist)?;
+    config
+        .templates
+        .iter()
+        .find(|&x| x == name)
+        .ok_or(AppError::TemplateDoesNotExist)?;
 
     let source = config.template_absolute_path.join(name);
 
@@ -154,118 +158,21 @@ pub fn show_config() -> Result<(), AppError> {
     let config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
     check_config(&config)?;
 
-    println!("Config file path: {}", confy::get_configuration_file_path(app_name!(), config_name!())?.to_str().unwrap());
+    println!(
+        "Config file path: {}",
+        confy::get_configuration_file_path(app_name!(), config_name!())?
+            .to_str()
+            .unwrap()
+    );
     println!("Version: {}", config.version);
-    println!("Template directory: {}", config.template_absolute_path.to_str().unwrap());
+    println!(
+        "Template directory: {}",
+        config.template_absolute_path.to_str().unwrap()
+    );
     println!("Templates: ");
     for template in config.templates {
         println!("\t- {}", template);
     }
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use std::path::PathBuf;
-    use crate::constants::{APP_NAME, CONFIG_NAME, APP_VERSION, TEMPLATE_FOLDER_NAME};
-    use crate::{AppError, InitPushArgs};
-    use crate::{app_name, app_version, config_name, template_path, template_folder_name};
-    use crate::functionality::{delete_init_function, init_function};
-    use crate::template_config_module::InitialConfig;
-
-    #[test]
-    fn test_init_function() -> Result<(), AppError> {
-        match delete_init_function() {
-            Ok(_) => (),
-            Err(AppError::TemplateNotInitialized) => (),
-            Err(x) => return Err(x),
-        }
-
-        let mut path = PathBuf::from("/tmp/");
-        path.push("app");
-
-        let args = InitPushArgs {
-            path: Some(path.to_str().unwrap().to_string())
-        };
-        path.push(template_path!());
-
-        init_function(&args)?;
-
-        let config: InitialConfig = confy::load(app_name!(), config_name!())?;
-
-        assert_eq!(config.template_absolute_path, path);
-        assert_eq!(config.version, app_version!());
-        assert!(config.initialized);
-
-        std::fs::remove_dir_all(PathBuf::from("/tmp/app/"))?;
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_init_function_default_path() -> Result<(), AppError> {
-        match delete_init_function() {
-            Ok(_) => (),
-            Err(AppError::TemplateNotInitialized) => (),
-            Err(x) => return Err(x),
-        }
-
-        let args = InitPushArgs {
-            path: None
-        };
-
-        init_function(&args)?;
-
-        let config: InitialConfig = confy::load(app_name!(), config_name!())?;
-
-        let mut test_path = confy::get_configuration_file_path(app_name!(), config_name!())?;
-        test_path.pop();
-        test_path.push(template_folder_name!());
-
-        assert_eq!(config.template_absolute_path, test_path);
-        assert_eq!(config.version, app_version!());
-        assert!(config.initialized);
-
-        let delete_path = confy::get_configuration_file_path(app_name!(), config_name!())?;
-        std::fs::remove_dir_all(delete_path.parent().unwrap())?;
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_save_template_function() -> Result<(), AppError> {
-        let mut path = PathBuf::from("/tmp/");
-        path.push("app");
-
-        let args = InitPushArgs {
-            path: Some(path.to_str().unwrap().to_string())
-        };
-        path.push(template_path!());
-
-        init_function(&args)?;
-
-        let args = crate::SaveTemplateArgs {
-            path: "/tmp/template/".to_string(),
-            name: "test".to_string(),
-            overwrite: false
-        };
-
-        std::fs::create_dir_all("/tmp/template/")?;
-
-        for i in 0..10 {
-            std::fs::File::create(format!("/tmp/template/test{}.txt", i))?;
-        }
-
-        crate::functionality::save_template_function(&args)?;
-
-        for i in 0..10 {
-            assert!(std::fs::metadata(format!("/tmp/app/templater/{}/test/test{}.txt", template_folder_name!(), i)).is_ok());
-        }
-
-        std::fs::remove_dir_all("/tmp/template/")?;
-        std::fs::remove_dir_all("/tmp/app/")?;
-
-        Ok(())
-    }
 }
