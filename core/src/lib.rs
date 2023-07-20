@@ -1,6 +1,7 @@
 use app_error::AppError;
 use config::{
-    check_config, create_default_config, create_manual_config, delete_config_parent, InitialConfig,
+    check_config, create_default_config, create_manual_config, delete_config_parent, template,
+    InitialConfig, Template, TemplateType,
 };
 use constants::{app_name, config_name};
 use constants::{InitPushArgs, LoadTemplateArgs, SaveTemplateArgs};
@@ -126,8 +127,7 @@ pub fn save_template_function(args: &SaveTemplateArgs) -> Result<(), AppError> {
     std::fs::create_dir_all(&destination)?;
 
     copy_to_dest(source, &destination)?;
-
-    config.templates.push(name.to_string());
+    config.templates.push(template!(name));
     config.templates.sort();
     confy::store(app_name!(), config_name!(), config)?;
 
@@ -144,7 +144,7 @@ pub fn load_template_function(args: &LoadTemplateArgs) -> Result<(), AppError> {
     config
         .templates
         .iter()
-        .find(|&x| x == name)
+        .find(|&x| x.name.as_str() == name.as_str())
         .ok_or(AppError::TemplateDoesNotExist)?;
 
     let source = config.template_absolute_path.join(name);
@@ -171,7 +171,23 @@ pub fn show_config() -> Result<(), AppError> {
     );
     println!("Templates: ");
     for template in config.templates {
-        println!("\t- {}", template);
+        println!("\t- {}", template.name);
+    }
+
+    Ok(())
+}
+
+pub fn show_templates() -> Result<(), AppError> {
+    let config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
+    check_config(&config)?;
+
+    if config.templates.is_empty() {
+        println!("No templates found");
+        return Ok(());
+    }
+
+    for template in config.templates {
+        println!("- {}", template.name);
     }
 
     Ok(())
