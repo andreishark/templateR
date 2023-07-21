@@ -5,8 +5,14 @@ pub enum AppError {
     #[error("IO Error: {0}")]
     Io(#[from] io::Error),
 
-    #[error("Confif parser Error: {0}")]
+    #[error("Confif Parser Error: {0}")]
     Confy(#[from] confy::ConfyError),
+
+    #[error("Git Error: {0}")]
+    Git(#[from] git2::Error),
+
+    #[error("Serde Error: {0}")]
+    Serde(#[from] serde_json::Error),
 
     #[error("The template directory is not initialized. Please run `templater init` first.")]
     TemplateNotInitialized,
@@ -20,6 +26,9 @@ pub enum AppError {
 
     #[error("Template already exists. Please run `templateR save-template [NAME] [PATH] --overwrite` to overwrite.")]
     TemplateAlreadyExists,
+
+    #[error("Template configuration is invalid.")]
+    TemplateInvalidConfig,
 }
 
 // impl fmt::Display for AppError {

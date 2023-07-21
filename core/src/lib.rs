@@ -3,10 +3,19 @@ use config::{
     check_config, create_default_config, create_manual_config, delete_config_parent, template,
     InitialConfig, Template, TemplateType,
 };
-use constants::{app_name, config_name};
+use constants::{app_name, config_name, remote_template_config_name};
 use constants::{InitPushArgs, LoadTemplateArgs, SaveTemplateArgs};
-use constants::{APP_NAME, CONFIG_NAME};
+use constants::{APP_NAME, CONFIG_NAME, REMOTE_TEMPLATE_CONFIG_NAME};
+use git2::Repository;
+use http::Uri;
+use serde::{Deserialize, Serialize};
+use std::fs::remove_dir_all;
 use std::path::Path;
+
+#[derive(Serialize, Deserialize)]
+struct RemoteTemplateConfig {
+    templates: Vec<String>,
+}
 
 fn copy_to_dest(source: &Path, dest: &Path) -> Result<(), AppError> {
     let iterated_paths = std::fs::read_dir(source)?;
@@ -189,6 +198,49 @@ pub fn show_templates() -> Result<(), AppError> {
     for template in config.templates {
         println!("- {}", template.name);
     }
+
+    Ok(())
+}
+
+pub fn clone_template_from_remote(url: Uri, skip_config_error: bool) -> Result<(), AppError> {
+    let config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
+    check_config(&config)?;
+    let temp_path = config.template_absolute_path.join("temp");
+
+    let repo = Repository::clone(&url.to_string(), &temp_path)?;
+
+    let repo_path = match repo.workdir() {
+        Some(repo) => repo,
+        None => return Err(git2::Error::from_str("No workdir found").into()),
+    };
+
+    if !repo_path.join(remote_template_config_name!()).exists() {
+        return Err(AppError::TemplateInvalidConfig);
+    }
+
+    let template_config: RemoteTemplateConfig = serde_json::from_reader(std::fs::File::open(
+        repo_path.join(remote_template_config_name!()),
+    )?)?;
+
+    for template in template_config.templates {
+        let source = repo_path.join(&template);
+        let destination = config.template_absolute_path.join(&template);
+
+        if !destination.exists() && !skip_config_error {
+            return Err(AppError::TemplateDoesNotExist);
+        }
+
+        if !destination.exists() && skip_config_error {
+            println!(
+                "Template {} from config doesn't exist. Skipping...",
+                template
+            );
+        }
+
+        copy_to_dest(&source, &destination)?;
+    }
+
+    remove_dir_all(temp_path)?;
 
     Ok(())
 }

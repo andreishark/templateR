@@ -12,3 +12,7 @@ config = { workspace = true }
 constants = { workspace = true }
 copy_dir = { workspace = true }
 confy = { workspace = true }
+git2 = { workspace = true }
+http = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

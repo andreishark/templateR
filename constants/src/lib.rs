@@ -6,6 +6,7 @@ pub static APP_VERSION_STRING: &str = env!("CARGO_PKG_VERSION");
 pub static APP_AUTHOR: &str = "andreishark";
 pub static APP_ABOUT: &str = "A simple templating tool.";
 pub static TEMPLATE_FOLDER_NAME: &str = "templates";
+pub static REMOTE_TEMPLATE_CONFIG_NAME: &str = "config.json";
 
 #[macro_export]
 macro_rules! app_name {
@@ -60,6 +61,13 @@ macro_rules! template_path {
 macro_rules! template_default_path {
     () => {
         format!(".config/{}/{}", app_name!(), template_folder_name!())
+    };
+}
+
+#[macro_export]
+macro_rules! remote_template_config_name {
+    () => {
+        REMOTE_TEMPLATE_CONFIG_NAME
     };
 }
 
