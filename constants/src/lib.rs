@@ -1,5 +1,3 @@
-use clap::Args;
-
 pub static APP_NAME: &str = env!("CARGO_PKG_NAME");
 pub static CONFIG_NAME: &str = "config";
 pub static APP_VERSION_STRING: &str = env!("CARGO_PKG_VERSION");
@@ -69,30 +67,4 @@ macro_rules! remote_template_config_name {
     () => {
         REMOTE_TEMPLATE_CONFIG_NAME
     };
-}
-
-#[derive(Debug, Args)]
-pub struct InitPushArgs {
-    /// Path to the template directory
-    #[arg(short, long)]
-    pub path: Option<String>,
-}
-
-#[derive(Debug, Args)]
-pub struct SaveTemplateArgs {
-    /// Name of the template
-    pub name: String,
-    /// Path to the template directory that you want to save
-    pub path: String,
-    /// Overwrite the template if it already exists
-    #[arg(short, long, action)]
-    pub overwrite: bool,
-}
-
-#[derive(Debug, Args)]
-pub struct LoadTemplateArgs {
-    /// Name of the template
-    pub name: String,
-    /// Path to the template directory that you want to save
-    pub path: String,
 }

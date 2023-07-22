@@ -1,4 +1,5 @@
 mod cli_derived;
+
 use app_error::AppError;
 use cli_derived::match_commands_derived;
 pub use cli_derived::Cli;

@@ -1,25 +1,19 @@
+mod cli_args;
+mod cli_subcommands;
+
 use app_error::AppError;
 use clap::{Parser, Subcommand};
-use constants::{
-    app_about, app_author, app_name, app_version_string, InitPushArgs, LoadTemplateArgs,
-    SaveTemplateArgs,
-};
+use constants::{app_about, app_author, app_name, app_version_string};
 use constants::{APP_ABOUT, APP_AUTHOR, APP_NAME, APP_VERSION_STRING};
 use core::{
-    delete_init_function, init_function, load_template_function, save_template_function,
-    show_config, show_templates,
+    clone_template_from_remote, delete_init_function, init_function, load_template_function,
+    save_template_function, show_config, show_templates,
 };
+use std::path::Path;
 
-#[derive(Subcommand)]
-pub enum InitCommands {
-    Delete,
-}
+use self::cli_args::{InitPushArgs, LoadTemplateArgs, SaveTemplateArgs};
 
-#[derive(Subcommand)]
-pub enum ShowCommands {
-    Config,
-    Templates,
-}
+use self::cli_subcommands::{InitCommands, RemoteCommands, ShowCommands};
 
 #[derive(Parser)]
 #[command(name = app_name!(), version = app_version_string!(), author = app_author!())]
@@ -53,6 +47,10 @@ pub enum Commands {
         #[command(subcommand)]
         command: ShowCommands,
     },
+    Remote {
+        #[command(subcommand)]
+        command: RemoteCommands,
+    },
 }
 
 /// This command will match the commands to the corresponding functions
@@ -75,18 +73,26 @@ pub fn match_commands_derived(cli: &Cli) -> Result<(), AppError> {
     match &cli.command {
         Commands::Init { push, command } => {
             match command {
-                None => init_function(push)?,
+                None => init_function(&push.path)?,
                 Some(commands) => match commands {
                     InitCommands::Delete => delete_init_function()?,
                 },
             };
         }
 
-        Commands::Save { save } => save_template_function(save)?,
-        Commands::Load { load } => load_template_function(load)?,
+        Commands::Save { save } => {
+            save_template_function(&save.name, Path::new(&save.path), save.overwrite)?
+        }
+        Commands::Load { load } => load_template_function(&load.name, Path::new(&load.path))?,
         Commands::Show { command } => match command {
             ShowCommands::Config => show_config()?,
             ShowCommands::Templates => show_templates()?,
+        },
+        Commands::Remote { command } => match command {
+            RemoteCommands::Get { args } => {
+                clone_template_from_remote(args.url.clone(), args.skip_config_error)?
+            }
+            RemoteCommands::Save => todo!(),
         },
     }
     Ok(())

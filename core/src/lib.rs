@@ -4,7 +4,6 @@ use config::{
     InitialConfig, Template, TemplateType,
 };
 use constants::{app_name, config_name, remote_template_config_name};
-use constants::{InitPushArgs, LoadTemplateArgs, SaveTemplateArgs};
 use constants::{APP_NAME, CONFIG_NAME, REMOTE_TEMPLATE_CONFIG_NAME};
 use git2::Repository;
 use http::Uri;
@@ -67,8 +66,8 @@ fn copy_to_dest(source: &Path, dest: &Path) -> Result<(), AppError> {
 /// assert_eq!(config.version, app_version!());
 /// assert!(config.initialized);
 /// ```
-pub fn init_function(args: &InitPushArgs) -> Result<(), AppError> {
-    let config = match &args.path {
+pub fn init_function(init_path: &Option<String>) -> Result<(), AppError> {
+    let config = match init_path {
         None => create_default_config()?,
         Some(path) => create_manual_config(Path::new(&path))?,
     };
@@ -113,12 +112,12 @@ pub fn delete_init_function() -> Result<(), AppError> {
 /// save_template_function(&args)?;
 ///
 /// ```
-pub fn save_template_function(args: &SaveTemplateArgs) -> Result<(), AppError> {
-    let path = Path::new(&args.path);
-    let name = &args.name;
+pub fn save_template_function(name: &str, path: &Path, overwrite: bool) -> Result<(), AppError> {
+    // let path = Path::new(&args.path);
+    // let name = &args.name;
     let mut config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
 
-    let overwrite = args.overwrite;
+    // let overwrite = args.overwrite;
 
     check_config(&config)?;
 
@@ -143,9 +142,8 @@ pub fn save_template_function(args: &SaveTemplateArgs) -> Result<(), AppError> {
     Ok(())
 }
 
-pub fn load_template_function(args: &LoadTemplateArgs) -> Result<(), AppError> {
-    let name = &args.name;
-    let path = Path::new(&args.path).canonicalize()?;
+pub fn load_template_function(name: &str, path: &Path) -> Result<(), AppError> {
+    let absolute_path = path.canonicalize()?;
 
     let config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
     check_config(&config)?;
@@ -153,12 +151,12 @@ pub fn load_template_function(args: &LoadTemplateArgs) -> Result<(), AppError> {
     config
         .templates
         .iter()
-        .find(|&x| x.name.as_str() == name.as_str())
+        .find(|&x| x.name.as_str() == name)
         .ok_or(AppError::TemplateDoesNotExist)?;
 
     let source = config.template_absolute_path.join(name);
 
-    copy_to_dest(&source, &path)?;
+    copy_to_dest(&source, &absolute_path)?;
 
     Ok(())
 }
@@ -202,7 +200,12 @@ pub fn show_templates() -> Result<(), AppError> {
     Ok(())
 }
 
-pub fn clone_template_from_remote(url: Uri, skip_config_error: bool) -> Result<(), AppError> {
+pub fn clone_template_from_remote(
+    url: Uri,
+    skip_config_error: Option<bool>,
+) -> Result<(), AppError> {
+    let skip_config_error = skip_config_error.unwrap_or(false);
+
     let config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
     check_config(&config)?;
     let temp_path = config.template_absolute_path.join("temp");
