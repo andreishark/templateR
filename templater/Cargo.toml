@@ -7,11 +7,11 @@ authors.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cli = { path = "../cli" }
-app_error = { path = "../app_error" }
-clap = { version = "4.3.1", features = ["derive"] }
-confy = "0.5.1"
-copy_dir = "0.1.2"
-home = "0.5.5"
-serde = { version = "1.0.163", features = ["derive"] }
-thiserror = "1.0.40"
+cli = { workspace = true }
+app_error = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+confy = { workspace = true }
+copy_dir = { workspace = true }
+home = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+thiserror = { workspace = true }

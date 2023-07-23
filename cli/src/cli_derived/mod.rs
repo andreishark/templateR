@@ -1,5 +1,6 @@
 mod cli_args;
 mod cli_subcommands;
+mod handlers;
 
 use app_error::AppError;
 use clap::{Parser, Subcommand};
@@ -9,6 +10,7 @@ use core::{
     clone_template_from_remote, delete_init_function, init_function, load_template_function,
     save_template_function, show_config, show_templates,
 };
+
 use std::path::Path;
 
 use self::cli_args::{InitPushArgs, LoadTemplateArgs, SaveTemplateArgs};
@@ -81,7 +83,7 @@ pub fn match_commands_derived(cli: &Cli) -> Result<(), AppError> {
         }
 
         Commands::Save { save } => {
-            save_template_function(&save.name, Path::new(&save.path), save.overwrite)?
+            save_template_function(&save.name, Path::new(&save.path), save.overwrite, None)?
         }
         Commands::Load { load } => load_template_function(&load.name, Path::new(&load.path))?,
         Commands::Show { command } => match command {
@@ -90,7 +92,8 @@ pub fn match_commands_derived(cli: &Cli) -> Result<(), AppError> {
         },
         Commands::Remote { command } => match command {
             RemoteCommands::Get { args } => {
-                clone_template_from_remote(args.url.clone(), args.skip_config_error)?
+                let result = clone_template_from_remote(args.url.clone(), args.skip_config_error);
+                handlers::handle_remote_get_error(result)?;
             }
             RemoteCommands::Save => todo!(),
         },

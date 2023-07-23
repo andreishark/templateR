@@ -3,8 +3,8 @@ use config::{
     check_config, create_default_config, create_manual_config, delete_config_parent, template,
     InitialConfig, Template, TemplateType,
 };
-use constants::{app_name, config_name, remote_template_config_name};
-use constants::{APP_NAME, CONFIG_NAME, REMOTE_TEMPLATE_CONFIG_NAME};
+use constants::{app_name, config_name, remote_template_config_name, temp_folder_name};
+use constants::{APP_NAME, CONFIG_NAME, REMOTE_TEMPLATE_CONFIG_NAME, TEMP_FOLDER_NAME};
 use git2::Repository;
 use http::Uri;
 use serde::{Deserialize, Serialize};
@@ -112,9 +112,15 @@ pub fn delete_init_function() -> Result<(), AppError> {
 /// save_template_function(&args)?;
 ///
 /// ```
-pub fn save_template_function(name: &str, path: &Path, overwrite: bool) -> Result<(), AppError> {
+pub fn save_template_function(
+    name: &str,
+    path: &Path,
+    overwrite: bool,
+    template_type: Option<TemplateType>,
+) -> Result<(), AppError> {
     // let path = Path::new(&args.path);
     // let name = &args.name;
+    let template_type = template_type.unwrap_or(TemplateType::Default);
     let mut config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
 
     // let overwrite = args.overwrite;
@@ -135,7 +141,7 @@ pub fn save_template_function(name: &str, path: &Path, overwrite: bool) -> Resul
     std::fs::create_dir_all(&destination)?;
 
     copy_to_dest(source, &destination)?;
-    config.templates.push(template!(name));
+    config.templates.push(template!(name, template_type));
     config.templates.sort();
     confy::store(app_name!(), config_name!(), config)?;
 
@@ -206,16 +212,14 @@ pub fn clone_template_from_remote(
 ) -> Result<(), AppError> {
     let skip_config_error = skip_config_error.unwrap_or(false);
 
-    let config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
+    let mut config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
     check_config(&config)?;
-    let temp_path = config.template_absolute_path.join("temp");
+    let temp_path = config.template_absolute_path.join(temp_folder_name!());
+    println!("Cloning template to {}", temp_path.display());
 
     let repo = Repository::clone(&url.to_string(), &temp_path)?;
 
-    let repo_path = match repo.workdir() {
-        Some(repo) => repo,
-        None => return Err(git2::Error::from_str("No workdir found").into()),
-    };
+    let repo_path = temp_path.as_path();
 
     if !repo_path.join(remote_template_config_name!()).exists() {
         return Err(AppError::TemplateInvalidConfig);
@@ -227,22 +231,29 @@ pub fn clone_template_from_remote(
 
     for template in template_config.templates {
         let source = repo_path.join(&template);
-        let destination = config.template_absolute_path.join(&template);
 
-        if !destination.exists() && !skip_config_error {
+        if !source.is_dir() && !skip_config_error {
             return Err(AppError::TemplateDoesNotExist);
         }
 
-        if !destination.exists() && skip_config_error {
+        if !source.is_dir() && skip_config_error {
             println!(
                 "Template {} from config doesn't exist. Skipping...",
                 template
             );
         }
 
-        copy_to_dest(&source, &destination)?;
+        match save_template_function(&template, &source, false, Some(TemplateType::Remote)) {
+            Ok(_) => {}
+            Err(e) => match e {
+                AppError::TemplateAlreadyExists => {
+                    println!("Template {} already exists. Skipping...", template);
+                    continue;
+                }
+                _ => return Err(e),
+            },
+        }
     }
-
     remove_dir_all(temp_path)?;
 
     Ok(())

@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use app_error;
 use cli;
 

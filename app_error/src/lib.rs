@@ -14,6 +14,9 @@ pub enum AppError {
     #[error("Serde Error: {0}")]
     Serde(#[from] serde_json::Error),
 
+    #[error("HTTP Error: {0}")]
+    Http(#[from] http::Error),
+
     #[error("The template directory is not initialized. Please run `templater init` first.")]
     TemplateNotInitialized,
 
