@@ -10,6 +10,7 @@ use http::Uri;
 use serde::{Deserialize, Serialize};
 use std::fs::remove_dir_all;
 use std::path::Path;
+use std::process::Command;
 
 #[derive(Serialize, Deserialize)]
 struct RemoteTemplateConfig {
@@ -212,12 +213,12 @@ pub fn clone_template_from_remote(
 ) -> Result<(), AppError> {
     let skip_config_error = skip_config_error.unwrap_or(false);
 
-    let mut config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
+    let config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
     check_config(&config)?;
     let temp_path = config.template_absolute_path.join(temp_folder_name!());
     println!("Cloning template to {}", temp_path.display());
 
-    let repo = Repository::clone(&url.to_string(), &temp_path)?;
+    Repository::clone(&url.to_string(), &temp_path)?;
 
     let repo_path = temp_path.as_path();
 
@@ -256,5 +257,63 @@ pub fn clone_template_from_remote(
     }
     remove_dir_all(temp_path)?;
 
+    Ok(())
+}
+
+pub fn add_new_template_git(path: &Path) -> Result<(), AppError> {
+    let config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
+    check_config(&config)?;
+
+    let temp_path = config.template_absolute_path.join(temp_folder_name!());
+    println!("Cloning template to {}", temp_path.display());
+
+    let repo = Repository::clone(path.to_str().unwrap(), &temp_path)?;
+
+    let repo_path = repo.path();
+    let remote_config_file_path = repo_path.join(remote_template_config_name!());
+
+    if !repo_path.join(remote_template_config_name!()).exists() {
+        return Err(AppError::TemplateInvalidConfig);
+    }
+
+    let mut template_config: RemoteTemplateConfig =
+        serde_json::from_reader(std::fs::File::open(&remote_config_file_path)?)?;
+
+    let template_name = path.file_name().unwrap().to_str().unwrap();
+
+    if template_config
+        .templates
+        .binary_search(&template_name.to_owned())
+        .is_ok()
+    {
+        return Err(AppError::TemplateAlreadyExists);
+    }
+
+    let destination = temp_path.join(path.file_name().unwrap());
+    copy_to_dest(path, &destination)?;
+
+    template_config.templates.push(template_name.to_owned());
+
+    serde_json::to_writer(
+        std::fs::File::create(&remote_config_file_path)?,
+        &template_config,
+    )?;
+
+    let commit_message = format!("Add template {}", template_name);
+
+    Command::new("git")
+        .args(&[
+            "add",
+            destination.to_str().unwrap(),
+            remote_config_file_path.to_str().unwrap(),
+        ])
+        .output()?;
+
+    Command::new("git")
+        .args(&["commit", "-m", commit_message.as_str()])
+        .output()?;
+    Command::new("git").args(&["push"]).output()?;
+
+    println!("Template {} added successfully", template_name);
     Ok(())
 }
