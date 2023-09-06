@@ -7,8 +7,8 @@ use clap::{Parser, Subcommand};
 use constants::{app_about, app_author, app_name, app_version_string};
 use constants::{APP_ABOUT, APP_AUTHOR, APP_NAME, APP_VERSION_STRING};
 use core::{
-    clone_template_from_remote, delete_init_function, init_function, load_template_function,
-    save_template_function, show_config, show_templates,
+    clone_template_from_remote, config_logic::delete_init_function, config_logic::init_function,
+    load_template_function, save_template_function, show_config, show_templates,
 };
 
 use std::path::Path;

@@ -1,12 +1,14 @@
+pub mod config_logic;
+mod io_functionality;
+mod template_interface;
+
 use app_error::AppError;
-use config::{
-    check_config, create_default_config, create_manual_config, delete_config_parent, template,
-    InitialConfig, Template, TemplateType,
-};
+use config::{check_config, template, template::Template, template::TemplateType, InitialConfig};
 use constants::{app_name, config_name, remote_template_config_name, temp_folder_name};
 use constants::{APP_NAME, CONFIG_NAME, REMOTE_TEMPLATE_CONFIG_NAME, TEMP_FOLDER_NAME};
 use git2::Repository;
 use http::Uri;
+use io_functionality::copy_to_dest;
 use serde::{Deserialize, Serialize};
 use std::fs::remove_dir_all;
 use std::path::Path;
@@ -15,79 +17,6 @@ use std::process::Command;
 #[derive(Serialize, Deserialize)]
 struct RemoteTemplateConfig {
     templates: Vec<String>,
-}
-
-fn copy_to_dest(source: &Path, dest: &Path) -> Result<(), AppError> {
-    let iterated_paths = std::fs::read_dir(source)?;
-
-    for item in iterated_paths {
-        let item = item?;
-        let item_path = std::fs::canonicalize(item.path())?;
-        let destination_path = dest.join(item_path.file_name().unwrap());
-
-        if item_path.is_dir() {
-            copy_dir::copy_dir(item_path, destination_path)?;
-        } else {
-            std::fs::copy(item_path, destination_path)?;
-        }
-    }
-
-    Ok(())
-}
-
-/// This function initializes the template directory, as well as the config file.
-/// This function is called when the user runs the command `init`.
-/// # Arguments
-///
-/// * `args`: &InitPushArgs - The arguments passed to the `init` command (contains the path to the template directory)
-///
-/// returns: Result<(), AppError>
-///
-/// # Examples
-///
-/// ```rust,ignore
-/// use std::path::PathBuf;
-/// use cli::{app_name, app_version, config_name, InitPushArgs, template_path};
-/// use cli::constants::{APP_NAME, APP_VERSION, CONFIG_NAME, TEMPLATE_FOLDER_NAME};
-/// use cli::template_config_module::InitialConfig;
-///
-/// let mut path = PathBuf::from("/tmp/");
-/// path.push("app");
-///
-/// let args = InitPushArgs {
-/// path: Some(path.to_str().unwrap().to_string())
-/// };
-/// path.push(template_path!());
-///
-/// init_function(&args)?;
-///
-/// let config: InitialConfig = confy::load(app_name!(), config_name!())?;
-///
-/// assert_eq!(config.template_absolute_path, path);
-/// assert_eq!(config.version, app_version!());
-/// assert!(config.initialized);
-/// ```
-pub fn init_function(init_path: &Option<String>) -> Result<(), AppError> {
-    let config = match init_path {
-        None => create_default_config()?,
-        Some(path) => create_manual_config(Path::new(&path))?,
-    };
-
-    confy::store(app_name!(), config_name!(), config)?;
-
-    Ok(())
-}
-
-pub fn delete_init_function() -> Result<(), AppError> {
-    let config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
-
-    check_config(&config)?;
-
-    std::fs::remove_dir_all(config.template_absolute_path)?;
-
-    delete_config_parent()?;
-
-    Ok(())
 }
 
 /// This function saves a template to the template directory.
