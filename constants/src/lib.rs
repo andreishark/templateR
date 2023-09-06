@@ -6,6 +6,7 @@ pub static APP_ABOUT: &str = "A simple templating tool.";
 pub static TEMPLATE_FOLDER_NAME: &str = "templates";
 pub static REMOTE_TEMPLATE_CONFIG_NAME: &str = "config.json";
 pub static TEMP_FOLDER_NAME: &str = "temp";
+pub static GIT_BASE_URL: &str = "https://github.com/andreishark/templater-templates.git";
 
 #[macro_export]
 macro_rules! app_name {
@@ -74,5 +75,12 @@ macro_rules! remote_template_config_name {
 macro_rules! temp_folder_name {
     () => {
         TEMP_FOLDER_NAME
+    };
+}
+
+#[macro_export]
+macro_rules! git_base_url {
+    () => {
+        GIT_BASE_URL
     };
 }

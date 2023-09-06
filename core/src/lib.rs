@@ -1,6 +1,6 @@
 pub mod config_logic;
-mod io_functionality;
 mod template_interface;
+pub mod template_providers;
 
 use app_error::AppError;
 use config::{check_config, template, template::Template, template::TemplateType, InitialConfig};
@@ -8,92 +8,64 @@ use constants::{app_name, config_name, remote_template_config_name, temp_folder_
 use constants::{APP_NAME, CONFIG_NAME, REMOTE_TEMPLATE_CONFIG_NAME, TEMP_FOLDER_NAME};
 use git2::Repository;
 use http::Uri;
-use io_functionality::copy_to_dest;
 use serde::{Deserialize, Serialize};
 use std::fs::remove_dir_all;
 use std::path::Path;
 use std::process::Command;
+use template_interface::TemplateInterface;
 
 #[derive(Serialize, Deserialize)]
 struct RemoteTemplateConfig {
     templates: Vec<String>,
 }
 
-/// This function saves a template to the template directory.
-///
-/// # Arguments
-///
-/// * `args`: A SaveTemplateArgs object
-/// (name of the template, path to the template that needs saving, overwrite the template if it already exists)
-///
-/// returns: Result<(), AppError>
-///
-/// # Examples
-///
-/// ```rust,ignore
-/// use cli::SaveTemplateArgs;
-///
-/// let args = SaveTemplateArgs {
-///     name: "test".to_string(),
-///     path: "/tmp/app".to_string(),
-///     overwrite: true
-/// };
-///
-/// save_template_function(&args)?;
-///
-/// ```
-pub fn save_template_function(
-    name: &str,
+pub fn save_single_template(
+    template_provider: &dyn TemplateInterface,
     path: &Path,
     overwrite: bool,
-    template_type: Option<TemplateType>,
+    template: Template,
 ) -> Result<(), AppError> {
-    // let path = Path::new(&args.path);
-    // let name = &args.name;
-    let template_type = template_type.unwrap_or(TemplateType::Default);
     let mut config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
-
-    // let overwrite = args.overwrite;
-
     check_config(&config)?;
 
-    if config.template_absolute_path.join(name).exists() && !overwrite {
+    if config.template_absolute_path.join(template.name).exists() && !overwrite {
         return Err(AppError::TemplateAlreadyExists);
     }
 
     if overwrite {
-        std::fs::remove_dir_all(config.template_absolute_path.join(name))?;
+        std::fs::remove_dir_all(config.template_absolute_path.join(template.name))?;
     }
 
-    let destination = config.template_absolute_path.join(name);
-    let source = path;
+    let str_path = match path.to_str() {
+        Some(value) => value,
+        None => return Err(AppError::InvalidPath),
+    };
 
-    std::fs::create_dir_all(&destination)?;
+    template_provider.save_single(&template, overwrite, str_path)?;
 
-    copy_to_dest(source, &destination)?;
-    config.templates.push(template!(name, template_type));
+    config.templates.push(template);
     config.templates.sort();
     confy::store(app_name!(), config_name!(), config)?;
 
     Ok(())
 }
 
-pub fn load_template_function(name: &str, path: &Path) -> Result<(), AppError> {
-    let absolute_path = path.canonicalize()?;
+// pub fn save_many_template_function() {}
 
+pub fn load_template(
+    template_provider: &dyn TemplateInterface,
+    name: &str,
+    path: &Path,
+) -> Result<(), AppError> {
     let config = confy::load::<InitialConfig>(app_name!(), config_name!())?;
     check_config(&config)?;
 
-    config
-        .templates
-        .iter()
-        .find(|&x| x.name.as_str() == name)
-        .ok_or(AppError::TemplateDoesNotExist)?;
+    let path_str = match path.to_str() {
+        Some(value) => value,
+        None => return Err(AppError::InvalidPath),
+    };
 
-    let source = config.template_absolute_path.join(name);
-
-    copy_to_dest(&source, &absolute_path)?;
-
+    template_provider.load(name, path_str);
     Ok(())
 }
 

@@ -17,6 +17,9 @@ pub enum AppError {
     #[error("HTTP Error: {0}")]
     Http(#[from] http::Error),
 
+    #[error("URI Error: {0}")]
+    Uri(#[from] http::uri::InvalidUri),
+
     #[error("The template directory is not initialized. Please run `templater init` first.")]
     TemplateNotInitialized,
 
@@ -32,6 +35,9 @@ pub enum AppError {
 
     #[error("Template configuration is invalid.")]
     TemplateInvalidConfig,
+
+    #[error("Invalid path provided.")]
+    InvalidPath,
 }
 
 // impl fmt::Display for AppError {

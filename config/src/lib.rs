@@ -3,10 +3,10 @@ pub mod template;
 use app_error::AppError;
 use confy::ConfyError;
 use constants::{
-    app_name, app_version_string, config_name, template_default_path, template_folder_name,
-    template_path,
+    app_name, app_version_string, config_name, git_base_url, template_default_path,
+    template_folder_name, template_path,
 };
-use constants::{APP_NAME, APP_VERSION_STRING, CONFIG_NAME, TEMPLATE_FOLDER_NAME};
+use constants::{APP_NAME, APP_VERSION_STRING, CONFIG_NAME, GIT_BASE_URL, TEMPLATE_FOLDER_NAME};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use template::Template;
@@ -17,6 +17,7 @@ pub struct InitialConfig {
     pub template_absolute_path: PathBuf,
     pub initialized: bool,
     pub templates: Vec<Template>,
+    pub git_base_url: String,
 }
 
 impl InitialConfig {
@@ -29,6 +30,7 @@ impl InitialConfig {
             template_absolute_path,
             initialized: false,
             templates: Vec::new(),
+            git_base_url: String::from(git_base_url!()),
         })
     }
 
@@ -49,6 +51,7 @@ impl InitialConfig {
             template_absolute_path: home_dir,
             initialized: false,
             templates: Vec::new(),
+            git_base_url: String::from(git_base_url!()),
         })
     }
 }
